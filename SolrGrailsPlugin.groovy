@@ -110,9 +110,14 @@ open source search server through the SolrJ library.
             // TODO - is there a bette way to ignore built in parameters?
           
             // create a new solr document
-            def doc = new SolrInputDocument();
-          
-            indexDomain(application, delegateDomainOjbect, doc)
+            SolrInputDocument doc = new SolrInputDocument();
+
+			if ( delegateDomainOjbect.metaClass.hasProperty( delegateDomainOjbect, "solrFieldInfo") ) {
+				indexUsingSuppliedInfo( delegateDomainOjbect, doc, delegateDomainOjbect.solrFieldInfo )
+				
+			} else {         
+            	indexDomain(application, delegateDomainOjbect, doc)
+			}
           
             server.add(doc)
             server.commit()
@@ -149,7 +154,11 @@ open source search server through the SolrJ library.
             def prefix = ""
             def solrFieldName
             def clazz = (delegate.class.name == 'java.lang.Class') ? delegate : delegate.class
-            def prop = clazz.declaredFields.find{ field -> field.name == name} 
+			
+            clazz.metaClass.properties.each{ field -> println field.name}
+//			clazz.fields.each{ field -> println field.name}
+            def prop = clazz.fields.find{ field -> field.name == name} 
+//            def prop = clazz.declaredFields.find{ field -> field.name == name} 
             
             if(!prop && name.contains(".")) {
               prefix = name[0..name.lastIndexOf('.')]     
@@ -162,7 +171,8 @@ open source search server through the SolrJ library.
                 //println "After ${delegateDomainOjbect}"
               }
 
-              prop = clazz.declaredFields.find{ field -> field.name == name}
+//              prop = clazz.declaredFields.find{ field -> field.name == name}
+              prop = clazz.fields.find{ field -> field.name == name}
             }
             
             def typeMap = SolrUtil.typeMapping["${prop?.type}"] 
@@ -233,7 +243,36 @@ open source search server through the SolrJ library.
         listeners."${typeProperty}" = expandedTypeListeners
     }
 
-  private indexDomain(application, delegateDomainOjbect, doc, depth = 1, prefix = "") {
+  /** 
+   * static solrFieldInfo = [ content:[field:'content_s'], tags:[field:'tags_s'] ]
+   *  may be an alternative form like,  list of property name, solr field name, boost
+   *  this way, the same field can be use multiple times
+   * static solrFieldInfo = [ ['content','content_s'], ['tags',,1.5f] ]
+   */
+  private indexUsingSuppliedInfo( delegateDomainObject, SolrInputDocument doc, Map solrFieldInfo ) {
+	  solrFieldInfo.each { propName, solrAttr ->
+		  def solrFieldName = solrAttr['field'] ?: propName; 
+		  def boost = solrAttr['boost']; 
+		  def docValue = delegateDomainObject.properties[ propName];
+		  if( docValue && DomainClassArtefactHandler.isDomainClass(docValue.class)){
+		  	docValue = "${docValue.id}";
+		  }
+		  if ( boost == null ) {
+			  doc.addField(solrFieldName, docValue)
+		  } else {
+			  doc.addField(solrFieldName, docValue, boost)
+		  }
+	  }
+	  // TO DO be able to supplied a shorter domain discrimantor
+	  // add a field to the index for the field ype
+	  doc.addField(SolrUtil.TYPE_FIELD, delegateDomainObject.class.name)
+	  
+	  // add a field for the id which will be the classname dash id
+	  doc.addField("id", "${delegateDomainObject.class.name}-${delegateDomainObject.id}")
+  
+  }
+	  
+  private indexDomain(application, delegateDomainOjbect, SolrInputDocument doc, depth = 1, prefix = "") {
     def domainDesc = application.getArtefact(DomainClassArtefactHandler.TYPE, delegateDomainOjbect.class.name)
     def clazz = (delegateDomainOjbect.class.name == 'java.lang.Class') ? delegateDomainOjbect : delegateDomainOjbect.class
     
@@ -281,7 +320,8 @@ open source search server through the SolrJ library.
             // for those not familiar with Solr this is an easy way to make sure the field is processed as text which should 
             // be the default search and processed with a WordDelimiterFilter   
           
-            def clazzProp = clazz.declaredFields.find{ field -> field.name == prop.name}
+//            def clazzProp = clazz.declaredFields.find{ field -> field.name == prop.name}
+            def clazzProp = clazz.fields.find{ field -> field.name == prop.name}
             if(clazzProp && clazzProp.isAnnotationPresent(Solr) && clazzProp.getAnnotation(Solr).asTextAlso()) {
               doc.addField("${prefix}${prop.name}_t", docValue)     
             }

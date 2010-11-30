@@ -23,6 +23,7 @@
 
 includeTool << gant.tools.Execute
 includeTargets << new File ( "scripts/StopSolr.groovy" )
+//includeTargets << GrailsScript ( "StopSolr.groovy" )
 
 Ant.property(environment: 'env')
 grailsHome = Ant.antProject.properties.'env.GRAILS_HOME'
