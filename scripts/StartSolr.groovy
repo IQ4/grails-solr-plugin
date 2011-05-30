@@ -37,10 +37,15 @@ target ( startsolr: "Start Solr Jetty Instance") {
     depends("init")
 		
 		// overlay the schema.xml config file in the apps grails-app/conf/solr directory (and other conf files)
-		Ant.copy(todir:"${solrHome}/solr/conf", failonerror: false) {
+		// change to always overwrite in case schema changed, also if logs dir not exist, the solr server will not come up
+
+		Ant.copy(todir:"${solrHome}/solr/conf", failonerror: false, overwrite:true, verbose:true) {
 			fileset( dir: "${basedir}/grails-app/conf/solr")
 		}
 
+
+		Ant.mkdir( dir:"${solrHome}/logs")
+			
 
 		// pause just for a bit more time to be sure Solr Stopped
 		Thread.sleep(1000)
