@@ -103,7 +103,7 @@ open source search server through the SolrJ library.
           dc.metaClass.indexSolr << { server = null ->
             def delegateDomainOjbect = delegate
             def solrService = ctx.getBean("solrService");
-            if(!server)
+             if(!server)
               server = solrService.getServer()
           
 
@@ -112,11 +112,20 @@ open source search server through the SolrJ library.
             // create a new solr document
             SolrInputDocument doc = new SolrInputDocument();
 
-			if ( delegateDomainOjbect.metaClass.hasProperty( delegateDomainOjbect, "solrFieldInfo") ) {
-				indexUsingSuppliedInfo( delegateDomainOjbect, doc, delegateDomainOjbect.solrFieldInfo )
-				
-			} else {         
-            	indexDomain(application, delegateDomainOjbect, doc)
+			boolean done = false;
+			try {
+				def appIndexService = ctx.getBean("appIndexService");
+				done = appIndexService.indexDomainObject( delegateDomainOjbect, doc );
+			} catch ( ex ) {}
+			
+			
+			if ( !done ){
+				if ( delegateDomainOjbect.metaClass.hasProperty( delegateDomainOjbect, "solrFieldInfo") ) {
+					indexUsingSuppliedInfo( delegateDomainOjbect, doc, delegateDomainOjbect.solrFieldInfo )
+					
+				} else {         
+	            	indexDomain(application, delegateDomainOjbect, doc)
+				}
 			}
           
             server.add(doc)
@@ -154,12 +163,8 @@ open source search server through the SolrJ library.
             def prefix = ""
             def solrFieldName
             def clazz = (delegate.class.name == 'java.lang.Class') ? delegate : delegate.class
+            def prop = clazz.declaredFields.find{ field -> field.name == name} 
 			
-            clazz.metaClass.properties.each{ field -> println field.name}
-//			clazz.fields.each{ field -> println field.name}
-            def prop = clazz.fields.find{ field -> field.name == name} 
-//            def prop = clazz.declaredFields.find{ field -> field.name == name} 
-            
             if(!prop && name.contains(".")) {
               prefix = name[0..name.lastIndexOf('.')]     
               name = name.substring(name.lastIndexOf('.')+1)    
@@ -171,10 +176,9 @@ open source search server through the SolrJ library.
                 //println "After ${delegateDomainOjbect}"
               }
 
-//              prop = clazz.declaredFields.find{ field -> field.name == name}
-              prop = clazz.fields.find{ field -> field.name == name}
+              prop = clazz.declaredFields.find{ field -> field.name == name}
             }
-            
+
             def typeMap = SolrUtil.typeMapping["${prop?.type}"] 
             solrFieldName = (typeMap) ? "${prefix}${name}${typeMap}" : "${prefix}${name}"
             
@@ -320,8 +324,17 @@ open source search server through the SolrJ library.
             // for those not familiar with Solr this is an easy way to make sure the field is processed as text which should 
             // be the default search and processed with a WordDelimiterFilter   
           
-//            def clazzProp = clazz.declaredFields.find{ field -> field.name == prop.name}
-            def clazzProp = clazz.fields.find{ field -> field.name == prop.name}
+            def clazzProp = clazz.declaredFields.find{ field -> field.name == prop.name}
+//            def clazzProp = clazz.fields.find{ field -> field.name == prop.name}
+			
+			if ( docKey.equals("astringanothername_s")) {
+				println "prop.name " + prop.name
+				println "class prop " + clazzProp
+				println "class prop has anno " +clazzProp.isAnnotationPresent(Solr)
+				println "class prop as TextAlso " + clazzProp.getAnnotation(Solr).asTextAlso()
+				
+			}
+			
             if(clazzProp && clazzProp.isAnnotationPresent(Solr) && clazzProp.getAnnotation(Solr).asTextAlso()) {
               doc.addField("${prefix}${prop.name}_t", docValue)     
             }

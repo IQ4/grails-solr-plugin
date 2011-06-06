@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/java"/>
-	<classpathentry excluding="docs/|grails-app/conf/|grails-app/domain/|grails-app/services/|grails-app/taglib/|src/groovy/|src/java/|test/integration/|test/unit/" kind="src" path=""/>
 	<classpathentry kind="src" path="src/groovy"/>
 	<classpathentry kind="src" path="grails-app/conf"/>
 	<classpathentry kind="src" path="grails-app/domain"/>
@@ -10,6 +9,11 @@
 	<classpathentry kind="src" path="test/integration"/>
 	<classpathentry kind="src" path="test/unit"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="com.springsource.sts.grails.core.CLASSPATH_CONTAINER"/>
+	<classpathentry exported="true" kind="con" path="com.springsource.sts.grails.core.CLASSPATH_CONTAINER"/>
+	<classpathentry kind="src" path=".link_to_grails_plugins/tomcat-1.3.6/src/groovy">
+		<attributes>
+			<attribute name="com.springsource.sts.grails.core.SOURCE_FOLDER" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="web-app/WEB-INF/classes"/>
 </classpath>
