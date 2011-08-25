@@ -121,7 +121,6 @@ open source search server through the SolrJ library.
 				throw ex; //rethrow
 			}
 			
-			println ("done = ${done}")
 			if ( !done ){
 				if ( delegateDomainOjbect.metaClass.hasProperty( delegateDomainOjbect, "solrFieldInfo") ) {
 					indexUsingSuppliedInfo( delegateDomainOjbect, doc, delegateDomainOjbect.solrFieldInfo )
