@@ -11,7 +11,7 @@
 def solrConfDir = "${basedir}/grails-app/conf/solr"
 if(! new File(solrConfDir)?.exists()) {
   Ant.mkdir(dir: "${basedir}/grails-app/conf/solr")
-  Ant.copy(todir:"${basedir}/grails-app/conf/solr") {
+  Ant.copy(todir:"${basedir}/grails-app/conf/solr", failonerror: false, overwrite:true, verbose:true) {
     fileset(dir: "${pluginBasedir}/src/solr-local/solr/conf" )
   }  
 }

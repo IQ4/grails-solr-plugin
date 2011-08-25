@@ -38,7 +38,7 @@ import org.grails.solr.SolrUtil
 
 class SolrGrailsPlugin {
     // the plugin version
-    def version = "0.3b"
+    def version = "0.3c"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.1 > *"
     // the other plugins this plugin depends on
@@ -114,16 +114,20 @@ open source search server through the SolrJ library.
 
 			boolean done = false;
 			try {
-				def appIndexService = ctx.getBean("appIndexService");
-				done = appIndexService.indexDomainObject( delegateDomainOjbect, doc );
-			} catch ( ex ) {}
+				def solrIndexService = ctx.getBean("solrIndexService");
+				done = solrIndexService.indexDomainObject( delegateDomainOjbect, doc );
+			} catch ( ex ) {
+				ex.printStackTrace();
+				throw ex; //rethrow
+			}
 			
-			
+			println ("done = ${done}")
 			if ( !done ){
 				if ( delegateDomainOjbect.metaClass.hasProperty( delegateDomainOjbect, "solrFieldInfo") ) {
 					indexUsingSuppliedInfo( delegateDomainOjbect, doc, delegateDomainOjbect.solrFieldInfo )
 					
 				} else {         
+					println ("bad using indexDomain")
 	            	indexDomain(application, delegateDomainOjbect, doc)
 				}
 			}
